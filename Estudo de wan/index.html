@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dendê & Sabor — PDV</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===== TELA DE LOGIN ===== -->
+<div id="screen-login" class="screen active">
+  <div class="login-bg">
+    <div class="login-pattern"></div>
+  </div>
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="logo-icon">🌴</span>
+      <h1>Dendê & Sabor</h1>
+      <p>Restaurante Baiano — Terminal PDV</p>
+    </div>
+    <div class="login-form">
+      <div class="field-group">
+        <label>Código do Operador</label>
+        <input type="text" id="login-codigo" placeholder="Ex: 001" maxlength="6" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <label>Senha</label>
+        <input type="password" id="login-senha" placeholder="••••••" maxlength="8">
+      </div>
+      <div id="login-erro" class="login-erro hidden">Código ou senha incorretos.</div>
+      <button id="btn-entrar" onclick="fazerLogin()">Entrar no Terminal</button>
+    </div>
+    <div class="login-hint">
+      <strong>Operadores:</strong> Garçom 1 (001 / 1234) · Garçom 2 (002 / 1234) · Caixa (999 / 9999)
+    </div>
+  </div>
+</div>
+
+<!-- ===== TELA PRINCIPAL PDV ===== -->
+<div id="screen-pdv" class="screen hidden">
+
+  <!-- HEADER -->
+  <header class="pdv-header">
+    <div class="header-left">
+      <span class="logo-mini">🌴</span>
+      <div>
+        <span class="header-title">Dendê & Sabor</span>
+        <span class="header-sub" id="header-operador">—</span>
+      </div>
+    </div>
+    <div class="header-center">
+      <div class="mesa-selector">
+        <button class="btn-escolher-mesa" onclick="abrirModalMesas()">
+          🪑 <span id="mesa-label">Escolher Mesa</span>
+        </button>
+        <div id="mesa-ativa-badge" class="mesa-ativa-badge hidden"></div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span id="header-hora" class="header-hora"></span>
+      <button class="btn-caixa" id="btn-caixa-header" onclick="abrirCaixa()" style="display:none">💰 Caixa</button>
+      <button class="btn-sair" onclick="fazerLogout()">Sair</button>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="pdv-main">
+
+    <!-- PAINEL ESQUERDO: CARDÁPIO -->
+    <section class="painel-cardapio">
+      <div class="categorias-tabs" id="categorias-tabs"></div>
+      <div class="busca-item">
+        <input type="text" id="busca-input" placeholder="🔍 Buscar prato..." oninput="filtrarItens()">
+      </div>
+      <div class="itens-grid" id="itens-grid"></div>
+    </section>
+
+    <!-- PAINEL DIREITO: PEDIDO ATUAL -->
+    <section class="painel-pedido">
+      <div class="pedido-header">
+        <h2 id="pedido-titulo">Selecione uma mesa</h2>
+        <span id="pedido-status" class="status-badge"></span>
+      </div>
+
+      <div class="pedido-lista" id="pedido-lista">
+        <div class="pedido-vazio">
+          <span>🍽️</span>
+          <p>Nenhum item adicionado</p>
+        </div>
+      </div>
+
+      <div class="pedido-obs">
+        <input type="text" id="obs-input" placeholder="Observação do pedido..." maxlength="80">
+      </div>
+
+      <div class="pedido-totais">
+        <div class="total-linha">
+          <span>Subtotal</span>
+          <span id="subtotal">R$ 0,00</span>
+        </div>
+        <div class="total-linha">
+          <span>Taxa serviço (10%)</span>
+          <span id="taxa">R$ 0,00</span>
+        </div>
+        <div class="total-linha total-final">
+          <span>Total</span>
+          <span id="total-final">R$ 0,00</span>
+        </div>
+      </div>
+
+      <div class="pedido-acoes">
+        <button class="btn-salvar" onclick="salvarPedido()">💾 Salvar Pedido</button>
+        <button class="btn-fechar-conta" onclick="fecharConta()">🧾 Fechar Conta</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ===== MODAL MESAS ===== -->
+<div id="modal-mesas" class="modal-overlay hidden">
+  <div class="modal-box modal-mesas-box">
+    <div class="modal-header">
+      <div>
+        <h2>🪑 Mapa de Mesas</h2>
+        <p class="modal-subtitulo">Clique em uma mesa para abrir ou acessar</p>
+      </div>
+      <button class="modal-close" onclick="fecharModal('modal-mesas')">✕</button>
+    </div>
+    <div class="mesas-legenda">
+      <span class="leg-item"><span class="leg-cor leg-livre"></span>Livre</span>
+      <span class="leg-item"><span class="leg-cor leg-aberta"></span>Em aberto</span>
+      <span class="leg-item"><span class="leg-cor leg-salva"></span>Pedido salvo</span>
+      <span class="leg-item"><span class="leg-cor leg-ativa"></span>Selecionada</span>
+    </div>
+    <div class="mesas-grid" id="mesas-grid"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL FECHAR CONTA ===== -->
+<div id="modal-conta" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>🧾 Fechar Conta</h2>
+      <button class="modal-close" onclick="fecharModal('modal-conta')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="conta-detalhes"></div>
+      <div class="pagamento-opcoes">
+        <h3>Forma de Pagamento</h3>
+        <div class="pgto-btns">
+          <button class="btn-pgto" onclick="selecionarPagamento('dinheiro')">💵 Dinheiro</button>
+          <button class="btn-pgto" onclick="selecionarPagamento('credito')">💳 Crédito</button>
+          <button class="btn-pgto" onclick="selecionarPagamento('debito')">💳 Débito</button>
+          <button class="btn-pgto" onclick="selecionarPagamento('pix')">📲 PIX</button>
+        </div>
+        <div id="troco-box" class="troco-box hidden">
+          <label>Valor recebido (R$):</label>
+          <input type="number" id="valor-recebido" placeholder="0,00" oninput="calcularTroco()">
+          <div id="troco-resultado"></div>
+        </div>
+      </div>
+      <div id="pgto-selecionado" class="pgto-selecionado hidden"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar-modal" onclick="fecharModal('modal-conta')">Cancelar</button>
+      <button class="btn-confirmar-pgto" id="btn-confirmar-pgto" onclick="confirmarPagamento()" disabled>✅ Confirmar Pagamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL CAIXA ===== -->
+<div id="modal-caixa" class="modal-overlay hidden">
+  <div class="modal-box modal-caixa-box">
+    <div class="modal-header">
+      <h2>💰 Painel do Caixa</h2>
+      <button class="modal-close" onclick="fecharModal('modal-caixa')">✕</button>
+    </div>
+    <div class="modal-body" id="caixa-conteudo"></div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast" class="toast hidden"></div>
+
+<script src="dados.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
